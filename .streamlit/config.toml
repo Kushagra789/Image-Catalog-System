@@ -1,0 +1,11 @@
+[browser]
+gatherUsageStats = false
+
+[server]
+maxUploadSize = 50
+# Only reachable from this computer. Remove to share on your network.
+address = "localhost"
+
+[theme]
+base = "light"
+primaryColor = "#3b5bdb"

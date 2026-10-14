@@ -1,0 +1,16 @@
+# Core
+streamlit>=1.51   # Components v2 is needed for the mouse bounding-box editor
+numpy>=1.26
+pandas>=2.1
+Pillow>=10.3
+opencv-python>=4.9
+
+# Object detection (optional at runtime: the app degrades gracefully without it)
+# - yolo11n-seg.pt (~6 MB) and yoloe-26s-seg-pf.pt (~40 MB) download into models/ on first use
+ultralytics>=8.4
+
+# Learned background removal for cutouts (optional; u2net ~176 MB downloads into models/rembg/ on first use)
+rembg[cpu]>=2.0.85
+
+# Testing
+pytest>=8.0

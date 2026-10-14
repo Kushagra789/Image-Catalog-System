@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Runtime data (catalog database + stored images) and downloaded models
+data/
+models/*.pt
+models/rembg/
+.ultralytics/
+runs/
+
+# Generated fixture exports
+test_data/synthetic/
+test_data/real_cartoons/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
