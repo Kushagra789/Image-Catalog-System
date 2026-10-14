@@ -125,8 +125,9 @@ Copy-Item data\catalog.db "data\backups\catalog_$(Get-Date -Format yyyyMMdd_HHmm
 **Open decisions (yours):**
 - [ ] Delete `C:\Users\kusha\AppData\Roaming\Ultralytics\settings.json` (created outside the project by an
       early version check in session 1; harmless).
-- [ ] `git init` and a first commit (`.gitignore` already excludes `data\`, `models\`, `.venv\` and third-party
-      test images).
+- [x] `git init` and a first commit: done 2026-10-14 (see section 7).
+- [ ] Connect GitHub (create a remote repository and push): deferred. You will do this later.
+- [ ] Re-run detection on image #2 (clementine): deferred, not done.
 
 ---
 
@@ -140,3 +141,36 @@ Copy-Item data\catalog.db "data\backups\catalog_$(Get-Date -Format yyyyMMdd_HHmm
 | Backups | `data\backups\` (3 database backups) |
 | Models | `models\yolo11n-seg.pt`, `models\yoloe-26s-seg-pf.pt`, `models\rembg\models\u2net\u2net.onnx` (MD5 verified) |
 | Environment | `.venv\` (Python 3.12.10); exact versions in `requirements-lock.txt` |
+| Version control | local Git repository on branch `main` (section 7) |
+
+---
+
+## 7. Git status (checked 2026-10-14)
+
+| Item | Status |
+|---|---|
+| Repository | local only: `C:\Users\kusha\Image-Catalog-System\.git`, branch `main` |
+| Commits | `f6ee8ff`: "Image Catalog System: complete project (208 tests passing)", 61 files (code, tests, docs, config) |
+| Author identity | `Kushagra Pandey <259154468+Kushagra789@users.noreply.github.com>`, from the global `C:\Users\kusha\.gitconfig` (no project-specific settings; **left unchanged by choice**) |
+| Remote | **none**. Nothing has been pushed; no GitHub repository exists for this project yet |
+| GitHub CLI (`gh`) | not installed |
+| Credential helper | Git Credential Manager (`manager`). Stored GitHub credentials, if any, were not inspected |
+| Not in Git (by `.gitignore`) | `data\` (catalog + images + backups), `models\`, `.venv\`, `test_data\` (synthetic exports, third-party cartoon images), caches |
+
+Changes made after the first commit (such as this update to `PROGRESS.md`) are not committed yet. Check with
+`git status`.
+
+**Later, to connect GitHub** (only when you decide to; these commands were not run):
+
+```powershell
+cd C:\Users\kusha\Image-Catalog-System
+git status                      # commit any pending changes first:  git add -A ; git commit -m "..."
+# create an EMPTY repository on github.com (no README/licence), then:
+git remote add origin https://github.com/<your-account>/<repo-name>.git
+git push -u origin main
+```
+
+Before pushing, note:
+- The models (~220 MB) and your catalog data stay local, because they are ignored.
+- Ultralytics models are AGPL-3.0. Keep the repository private, or check the licence, if that matters for
+  your submission.
