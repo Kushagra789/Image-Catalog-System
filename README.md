@@ -13,7 +13,7 @@ objects cut out of catalog images.
 
 | Document | Contents |
 |---|---|
-| `README.md` (this file) | installation, running, features, architecture, schema, testing summary, limitations |
+| `README.md` (this file) | installation, running, features, architecture, schema, testing summary, limitations, licence, AI-assistance disclosure |
 | `PROJECT_REPORT.md` | full project report: requirements traceability, algorithms, testing report, evaluation, ethics |
 | `MANUAL_TESTING.md` | manual/browser test checklist with the actual results (PASS / FAIL→FIXED / NOT TESTED) |
 | `PROGRESS.md` | development log, final status and how to resume |
@@ -295,3 +295,13 @@ users the corresponding source code.
 No model weights, photos or third-party test images are included in this repository. The real-cartoon test
 images used during evaluation came from Wikimedia Commons (CC0 / CC BY-SA 4.0 / public domain) and are kept
 locally only.
+
+## 10. AI assistance
+
+This project was developed with substantial AI assistance:
+- **What the AI did:** large parts of the code, the tests and the documentation were generated with **Claude
+  (Anthropic)**, used through Claude Code, under the author's direction.
+- **What the author did:** defined the requirements, made the design and publication decisions, ran and reviewed
+  the tests and results, and published the work.
+
+See also `PROJECT_REPORT.md` §10.

@@ -427,8 +427,14 @@ See `MANUAL_TESTING.md` for every result.
     (AGPL §13).
   - *Open questions:*
     - Institutional rules on publishing coursework should be checked.
-    - Copyright in AI-assisted code (commits are co-authored with Claude) is not settled in every jurisdiction.
-      This does not prevent licensing the project.
+    - Copyright in AI-assisted code (see *AI assistance* below) is not settled in every jurisdiction. This does
+      not prevent licensing the project.
+- **AI assistance (disclosure).** This project was developed with substantial AI assistance:
+  - *What the AI did:* large parts of the code, the tests and the documentation were generated with Claude
+    (Anthropic), used through Claude Code, under the author's direction.
+  - *What the author did:* defined the requirements, made the design and publication decisions, ran and reviewed
+    the tests and results, and published the work.
+  - *Where it is disclosed:* in the project documents rather than in the commit metadata.
 
 ---
 
