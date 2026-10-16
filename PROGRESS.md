@@ -1,7 +1,8 @@
 # Progress Log: Image Catalog System
 
 _Last updated: 2026-10-16. **Status: feature-complete; 218/218 automated tests passing; 37 real-browser acceptance
-checks passed (Playwright). Four small items remain for a person (see §5).**_
+checks passed (Playwright); published as a public repository at
+<https://github.com/Kushagra789/Image-Catalog-System> (AGPL-3.0-only). Three checks remain NOT TESTED (see §5).**_
 
 Documentation: `README.md` (install, run, architecture, schema, testing summary) · `PROJECT_REPORT.md` (full report)
 · `MANUAL_TESTING.md` (checklist with actual results) · this file (status and history).
@@ -126,7 +127,9 @@ existing `.venv`, Playwright 1.64 installed).
       *Keep my corrections* → Run detection refreshes it safely. Not done.
 - [ ] **Stray settings file.** Delete `%APPDATA%\Ultralytics\settings.json` (created
       outside the project in session 1; harmless).
-- [ ] **Connect GitHub and push.** Deferred; ask first (§7).
+- [x] **Connect GitHub and push.** Done 2026-10-16: public repository, only `main` pushed (§7).
+- [ ] **Local backups of the old history** (`backup/before-email-rewrite`, `refs/original/…`): keep or delete
+      (they contain the old Gmail address; local only, never pushed).
 - [ ] **Remove the browser files (optional).** To free 719 MB after testing: `pip uninstall playwright` and delete
       `.playwright\`. `tests/test_browser_e2e.py` then skips itself.
 
@@ -158,29 +161,29 @@ existing `.venv`, Playwright 1.64 installed).
 
 | Item | Status |
 |---|---|
-| Repository | local only (`.git` in the project folder), branch `main`; **no remote, nothing pushed** |
-| Commits on `main` | `f4f9df9` (complete project), `4ab7191` (progress and Git status), `57a4ce7` (browser-found fixes and acceptance results), plus the commit that records this section |
+| Repository | **public on GitHub:** <https://github.com/Kushagra789/Image-Catalog-System>; remote `origin`; local `main` tracks `origin/main` |
+| Commits on `main` | `f4f9df9` (complete project), `4ab7191` (progress and Git status), `57a4ce7` (browser-found fixes and acceptance results), `863905e` (AGPL-3.0-only licence and public README), plus the commit that records this section |
 | Author identity | `Kushagra Pandey <259154468+Kushagra789@users.noreply.github.com>` (GitHub no-reply address), set **for this repository only** (`git config --local`); the global `.gitconfig` is unchanged |
 | History rewrite | On 2026-10-16, with your approval, the 3 commits were rewritten so that the personal Gmail address no longer appears (author/committer fields and one line of `PROGRESS.md`). Dates, messages and all other content are unchanged; the old IDs were `f6ee8ff`, `b23ebe3`, `a9b221e` |
-| Local-only backups of the old history | branch `backup/before-email-rewrite` and `refs/original/refs/heads/main`. They still contain the Gmail address. `git push -u origin main` does **not** upload them; never use `git push --all` or `--mirror`. Delete them once the new history is confirmed (only with your permission) |
+| Local-only backups of the old history | branch `backup/before-email-rewrite` and `refs/original/refs/heads/main`. They still contain the Gmail address and were **never pushed**. Never use `git push --all` or `--mirror`. Delete them only with your permission |
 | Ignored (never committed) | `data\` (catalog, images, backups), `models\`, `.venv\`, `.playwright\`, `test_data\`, `test_evidence\`, caches |
 | Licence | **AGPL-3.0-only** (`LICENSE`, official GNU text), chosen for public release because Ultralytics is AGPL-3.0; obligations and open questions are in `README.md` §9 and `PROJECT_REPORT.md` §10 |
-| Visibility decision | **public** repository under `Kushagra789` (decided 2026-10-16); not yet created or pushed |
+| Visibility | **public** repository under `Kushagra789` |
 
-**Publish on GitHub** (account `Kushagra789`, **public** repository; nothing below has been run):
+**Publication record (2026-10-16):**
+1. **Before pushing:**
+   - Clean working tree.
+   - `main` contained no personal email addresses (only the no-reply address), secrets, databases, photos, model
+     weights, virtual environment or caches.
+   - No tags.
+   - The GitHub repository was public and empty.
+2. **Pushed:** `git push -u origin refs/heads/main:refs/heads/main` (no `--all`, `--mirror`, `--force` or tags).
+3. **Verified on GitHub** (through its API):
+   - only branch `main`, at `863905e`, identical to local; no tags;
+   - 4 commits, all under the no-reply address;
+   - 64 files, a file list identical to local `main`, 422 KB, nothing forbidden;
+   - licence detected as **AGPL-3.0**;
+   - the backup branch and `refs/original` were not pushed.
 
-1. On github.com:
-   - **Settings → Emails:** tick **Keep my email addresses private** and
-     **Block command line pushes that expose my email**.
-   - **New repository:** name `Image-Catalog-System`, **Public**, and **no** README, .gitignore or licence
-     (all three are already in the project).
-2. In PowerShell:
-
-   ```powershell
-   cd Image-Catalog-System
-   git status                                   # must say: nothing to commit, working tree clean
-   git remote add origin https://github.com/Kushagra789/Image-Catalog-System.git
-   git push -u origin main                      # Git Credential Manager opens a browser sign-in the first time
-   ```
-3. Check on github.com: 5 commits, about 64 files (including `LICENSE`), no `data\`, `models\` or `.venv\`
-   folders.
+**Later updates:** commit locally, then `git push origin main` (only `main`; never `--all`, `--mirror` or
+`--force`).
