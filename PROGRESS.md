@@ -11,7 +11,7 @@ Documentation: `README.md` (install, run, architecture, schema, testing summary)
 ## 1. Commands
 
 ```powershell
-cd C:\Users\kusha\Image-Catalog-System
+cd Image-Catalog-System                      # the project folder
 .\.venv\Scripts\Activate.ps1                 # Python 3.12.10 venv (blocked? Set-ExecutionPolicy -Scope CurrentUser RemoteSigned)
 python -m pytest                             # expect: 218 passed (~1.5–2 min)
 streamlit run app.py                         # http://localhost:8501 ; Ctrl+C to stop
@@ -124,7 +124,7 @@ existing `.venv`, Playwright 1.64 installed).
 - [ ] **Image #2 (clementine).** It still holds 8 OpenCV regions from before the photo fix, and its orange
       cut-out is noticeably worse than a refreshed record's. It has no corrections, so Object Detection →
       *Keep my corrections* → Run detection refreshes it safely. Not done.
-- [ ] **Stray settings file.** Delete `C:\Users\kusha\AppData\Roaming\Ultralytics\settings.json` (created
+- [ ] **Stray settings file.** Delete `%APPDATA%\Ultralytics\settings.json` (created
       outside the project in session 1; harmless).
 - [ ] **Connect GitHub and push.** Deferred; ask first (§7).
 - [ ] **Remove the browser files (optional).** To free 719 MB after testing: `pip uninstall playwright` and delete
@@ -154,26 +154,33 @@ existing `.venv`, Playwright 1.64 installed).
 
 ---
 
-## 7. Git status
+## 7. Git status (2026-10-16)
 
 | Item | Status |
 |---|---|
-| Repository | local only: `C:\Users\kusha\Image-Catalog-System\.git`, branch `main` |
-| Commits before this session | `f6ee8ff` (complete project), `b23ebe3` (progress and Git status) |
-| Author identity | `Kushagra Pandey <259154468+Kushagra789@users.noreply.github.com>` from the global `.gitconfig` (unchanged) |
-| Remote | **none**; nothing has been pushed |
+| Repository | local only (`.git` in the project folder), branch `main`; **no remote, nothing pushed** |
+| Commits on `main` | `f4f9df9` (complete project), `4ab7191` (progress and Git status), `57a4ce7` (browser-found fixes and acceptance results), plus the commit that records this section |
+| Author identity | `Kushagra Pandey <259154468+Kushagra789@users.noreply.github.com>` (GitHub no-reply address), set **for this repository only** (`git config --local`); the global `.gitconfig` is unchanged |
+| History rewrite | On 2026-10-16, with your approval, the 3 commits were rewritten so that the personal Gmail address no longer appears (author/committer fields and one line of `PROGRESS.md`). Dates, messages and all other content are unchanged; the old IDs were `f6ee8ff`, `b23ebe3`, `a9b221e` |
+| Local-only backups of the old history | branch `backup/before-email-rewrite` and `refs/original/refs/heads/main`. They still contain the Gmail address. `git push -u origin main` does **not** upload them; never use `git push --all` or `--mirror`. Delete them once the new history is confirmed (only with your permission) |
 | Ignored (never committed) | `data\` (catalog, images, backups), `models\`, `.venv\`, `.playwright\`, `test_data\`, `test_evidence\`, caches |
+| Licence | **AGPL-3.0-only** (`LICENSE`, official GNU text), chosen for public release because Ultralytics is AGPL-3.0; obligations and open questions are in `README.md` §9 and `PROJECT_REPORT.md` §10 |
+| Visibility decision | **public** repository under `Kushagra789` (decided 2026-10-16); not yet created or pushed |
 
-**Later, to connect GitHub** (only when you decide to; these commands have not been run):
+**Publish on GitHub** (account `Kushagra789`, **public** repository; nothing below has been run):
 
-```powershell
-git status                      # make sure everything is committed
-# create an EMPTY repository on github.com (no README/licence), then:
-git remote add origin https://github.com/<your-account>/<repo-name>.git
-git push -u origin main
-```
+1. On github.com:
+   - **Settings → Emails:** tick **Keep my email addresses private** and
+     **Block command line pushes that expose my email**.
+   - **New repository:** name `Image-Catalog-System`, **Public**, and **no** README, .gitignore or licence
+     (all three are already in the project).
+2. In PowerShell:
 
-Before pushing:
-- The models (~220 MB), the Playwright browsers and your catalog/photos stay local, because they are ignored.
-- Ultralytics models are AGPL-3.0. Keep the repository private, or check the licence, if that matters for your
-  submission.
+   ```powershell
+   cd Image-Catalog-System
+   git status                                   # must say: nothing to commit, working tree clean
+   git remote add origin https://github.com/Kushagra789/Image-Catalog-System.git
+   git push -u origin main                      # Git Credential Manager opens a browser sign-in the first time
+   ```
+3. Check on github.com: 5 commits, about 64 files (including `LICENSE`), no `data\`, `models\` or `.venv\`
+   folders.

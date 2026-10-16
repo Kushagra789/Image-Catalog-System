@@ -1,6 +1,6 @@
 # Project Report: Image Catalog, Object Detection, Metadata Management and Composite Image Generation System
 
-_Report date: 2026-10-16 · Platform: Windows 11, Python 3.12.10, Streamlit 1.65.0 · Repository: `C:\Users\kusha\Image-Catalog-System`_
+_Report date: 2026-10-16 · Platform: Windows 11, Python 3.12.10, Streamlit 1.65.0 · Repository: `github.com/Kushagra789/Image-Catalog-System` · Licence: AGPL-3.0-only_
 
 ---
 
@@ -419,8 +419,16 @@ See `MANUAL_TESTING.md` for every result.
   models are kept inside the project folder.
 - **Third-party test images** in `test_data/real_cartoons/` are CC0 / CC BY-SA 4.0 / public domain, with
   attribution in `ATTRIBUTION.md`. They are excluded from git.
-- **Model licences.** Ultralytics models are AGPL-3.0 (fine for coursework; commercial use needs a licence),
-  and U2Net (rembg) is Apache-2.0.
+- **Model licences.** Ultralytics code and models are AGPL-3.0 (a commercial Enterprise licence is available
+  from Ultralytics); U2Net (rembg) is Apache-2.0. No weights are included in the repository.
+- **Project licence.** The project is published under **AGPL-3.0-only** (`LICENSE`), which is compatible with
+  Ultralytics' AGPL-3.0 and with the permissive licences (Apache-2.0, MIT, BSD) of the other dependencies.
+  - *Obligation:* anyone who runs a modified version as a network service must offer its users the source code
+    (AGPL §13).
+  - *Open questions:*
+    - Institutional rules on publishing coursework should be checked.
+    - Copyright in AI-assisted code (commits are co-authored with Claude) is not settled in every jurisdiction.
+      This does not prevent licensing the project.
 
 ---
 
@@ -437,7 +445,7 @@ See `MANUAL_TESTING.md` for every result.
 See `README.md` → *Quick start*. In short:
 
 ```powershell
-cd C:\Users\kusha\Image-Catalog-System
+cd Image-Catalog-System
 .\.venv\Scripts\Activate.ps1
 python -m pytest
 streamlit run app.py

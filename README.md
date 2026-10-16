@@ -4,13 +4,20 @@ A local web application for cataloguing images, detecting objects in photographs
 detections by hand, and building **composite images from natural-language instructions** using only real
 objects cut out of catalog images.
 
+**Status:**
+- **Automated tests:** 218 passed.
+- **Real-browser checks (Playwright/Chromium):** 37 passed.
+- **Not tested yet:** 3 items: touch input, the author's own cartoons, and cell editing in the composer's layer
+  table (see `MANUAL_TESTING.md`).
+- **Licence:** [AGPL-3.0-only](LICENSE).
+
 | Document | Contents |
 |---|---|
 | `README.md` (this file) | installation, running, features, architecture, schema, testing summary, limitations |
 | `PROJECT_REPORT.md` | full project report: requirements traceability, algorithms, testing report, evaluation, ethics |
-| `MANUAL_TESTING.md` | checklist of what must still be verified by hand in a browser |
-| `PROGRESS.md` | final status and how to resume |
-| `test_data/real_cartoons/ATTRIBUTION.md` | licences of the third-party test images |
+| `MANUAL_TESTING.md` | manual/browser test checklist with the actual results (PASS / FAIL→FIXED / NOT TESTED) |
+| `PROGRESS.md` | development log, final status and how to resume |
+| `LICENSE` | GNU Affero General Public License v3.0 |
 
 ---
 
@@ -20,7 +27,8 @@ Requirements: Windows 10/11, **Python 3.12** (3.14 is not used: PyTorch/Ultralyt
 internet access once (for packages and model downloads), ~2 GB of disk space. No WSL, no paid services.
 
 ```powershell
-cd C:\Users\kusha\Image-Catalog-System
+git clone https://github.com/Kushagra789/Image-Catalog-System.git
+cd Image-Catalog-System
 
 # 1. Create and activate the virtual environment
 py -3.12 -m venv .venv
@@ -33,8 +41,8 @@ pip install -r requirements-lock.txt     # exact versions verified with the test
 #   (or: pip install -r requirements.txt  for the minimum-version list)
 ```
 
-The project folder already contains an installed `.venv` and the downloaded models, so on this machine only
-step 1's `Activate.ps1` line is needed.
+Model weights, the virtual environment, the image catalog and test images are **not** in the repository. They
+are created or downloaded locally.
 
 **Models** are stored in `models\` and downloaded automatically on first use if missing:
 
@@ -51,7 +59,7 @@ the 176 MB download.
 ## 2. Running
 
 ```powershell
-cd C:\Users\kusha\Image-Catalog-System
+cd Image-Catalog-System
 .\.venv\Scripts\Activate.ps1
 streamlit run app.py            # opens http://localhost:8501 ; stop with Ctrl+C
 python -m pytest                # full automated test suite (~1.5 min)
@@ -165,7 +173,7 @@ imagecat/
   ui/                        one module per page; bbox_editor.py + static/bbox_editor.js (mouse editor)
 scripts/generate_test_images.py
 tests/                       pytest suite (17 test modules, incl. a real-browser test)
-test_data/real_cartoons/     6 openly licensed real test images (not in git)
+test_data/real_cartoons/     6 openly licensed third-party test images (local only, not in the repository)
 ```
 
 ## 5. Technologies and algorithms
@@ -257,3 +265,33 @@ at the end of `MANUAL_TESTING.md`.
 - **Instructions** are rule-based: no free-form descriptions or exact distances.
 - **Mouse editor:** verified with real mouse events in Chromium; touch input is untested.
 - **Single-user local application** on CPU.
+
+## 9. Licence
+
+Copyright (C) 2026 Kushagra Pandey.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero
+General Public License, version 3 only** (SPDX: `AGPL-3.0-only`), as published by the Free Software Foundation.
+It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [`LICENSE`](LICENSE) for the full text.
+
+**Why AGPL:** the project uses Ultralytics YOLO/YOLOE, which is licensed AGPL-3.0, so the project is published
+under a compatible licence.
+
+**If you run a modified version as a network service** for other people, AGPL §13 requires you to offer those
+users the corresponding source code.
+
+**Third-party components:**
+
+| Component | Licence |
+|---|---|
+| Ultralytics (code and the YOLO/YOLOE weights it downloads; not included here) | AGPL-3.0 |
+| Streamlit, OpenCV, PyTorch, Playwright | Apache-2.0 |
+| NumPy, pandas, torchvision | BSD |
+| Pillow | MIT-CMU |
+| rembg, onnxruntime, pytest | MIT |
+| U2Net weights (downloaded by rembg) | Apache-2.0 |
+
+No model weights, photos or third-party test images are included in this repository. The real-cartoon test
+images used during evaluation came from Wikimedia Commons (CC0 / CC BY-SA 4.0 / public domain) and are kept
+locally only.
