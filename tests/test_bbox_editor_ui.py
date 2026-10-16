@@ -7,6 +7,7 @@ from streamlit.testing.v1 import AppTest  # noqa: E402
 from imagecat.config import Settings  # noqa: E402
 from imagecat.service import CatalogService  # noqa: E402
 from tests.conftest import fixture_png  # noqa: E402
+from imagecat.ui.editor import form_key  # noqa: E402
 
 
 def _editor_with_fake_gesture(event):
@@ -67,7 +68,7 @@ def test_drag_moves_box_into_form_and_save_persists(svc):
     first = svc.db.list_objects(rec.id)[0]
     event = {"id": first.id, "x": 20, "y": 30, "width": 111, "height": 99, "action": "move", "seq": 1}
     at = _run(event)
-    k = f"e{first.id}"
+    k = form_key(first)
     assert (_num(at, f"{k}_x"), _num(at, f"{k}_y"), _num(at, f"{k}_w"), _num(at, f"{k}_h")) == (20, 30, 111, 99)
     assert svc.db.get_object(first.id).bbox.as_tuple() == first.bbox.as_tuple()  # not saved yet
     next(b for b in at.button if b.label == "Save changes").click().run()
@@ -80,7 +81,7 @@ def test_same_gesture_is_applied_only_once(svc):
     rec = svc.catalog.list_images()[0]
     first = svc.db.list_objects(rec.id)[0]
     at = _run({"id": first.id, "x": 20, "y": 30, "width": 111, "height": 99, "action": "move", "seq": 7})
-    k = f"e{first.id}"
+    k = form_key(first)
     next(n for n in at.number_input if n.key == f"{k}_x").set_value(55).run()  # user types afterwards
     assert _num(at, f"{k}_x") == 55  # the old gesture (same seq) does not overwrite the typed value
 
@@ -91,7 +92,7 @@ def test_clicking_another_box_selects_it(svc):
     target = objs[2]
     at = _run({"id": target.id, **dict(zip(("x", "y", "width", "height"), target.bbox.as_tuple())),
                "action": "select", "seq": 3})
-    assert at.session_state[f"edit_obj_{rec.id}"] == target.id
+    assert at.session_state[f"edit_selected_{rec.id}"] == target.id
     assert at.session_state["_last_payload"]["selected"] == target.id
 
 
@@ -114,6 +115,23 @@ def test_out_of_range_gesture_is_clamped(svc):
     rec = svc.catalog.list_images()[0]
     first = svc.db.list_objects(rec.id)[0]
     at = _run({"id": first.id, "x": 630, "y": 470, "width": 500, "height": 500, "action": "resize", "seq": 2})
-    k = f"e{first.id}"
+    k = form_key(first)
     x, y, w, h = (_num(at, f"{k}_{f}") for f in ("x", "y", "w", "h"))
     assert x + w <= rec.width and y + h <= rec.height
+
+
+def test_move_on_a_box_that_is_not_selected_is_applied_not_dropped(svc):
+    """Found in the real-browser run: a drag arriving while the selection pointed
+    at another object was treated as a plain click and discarded."""
+    rec = svc.catalog.list_images()[0]
+    objs = svc.db.list_objects(rec.id)
+    selected, other = objs[0], objs[2]
+    event = {"id": other.id, "x": 30, "y": 40, "width": other.width, "height": other.height,
+             "action": "move", "seq": 21}
+    at = AppTest.from_function(_editor_with_fake_gesture, args=(event,), default_timeout=120)
+    at.session_state[f"edit_selected_{rec.id}"] = selected.id
+    at.run()
+    assert not at.exception
+    assert at.session_state[f"edit_selected_{rec.id}"] == other.id      # now selected ...
+    k = form_key(other)
+    assert (_num(at, f"{k}_x"), _num(at, f"{k}_y")) == (30, 40)          # ... and the move kept

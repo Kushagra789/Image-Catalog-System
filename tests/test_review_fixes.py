@@ -16,6 +16,7 @@ from imagecat.composer import Composer  # noqa: E402
 from imagecat.config import Settings  # noqa: E402
 from imagecat.service import RERUN_KEEP_MANUAL, CatalogService  # noqa: E402
 from tests.conftest import fixture_png  # noqa: E402
+from imagecat.ui.editor import form_key  # noqa: E402
 
 
 # ------------------------------------------------------------------ helpers
@@ -63,7 +64,7 @@ def test_relabel_by_button_is_not_reverted_by_next_save(app_svc):
         **target.attributes, "alternative_labels": [{"label": "ball", "source": "yolo", "confidence": 0.4}]})
     at = AppTest.from_function(_editor_page, args=(None,), default_timeout=120)
     at.run()
-    assert at.text_input(key=f"e{target.id}_label").value == target.label
+    assert at.text_input(key=f"{form_key(target)}_label").value == target.label
     _button(at, "Use").click().run()
     assert app_svc.db.get_object(target.id).label == "ball"
     _button(at, "Save changes").click().run()  # e.g. to save a box tweak
@@ -79,8 +80,8 @@ def test_save_then_save_again_keeps_cleared_confidence(app_svc):
     app_svc.db.update_object(target.id, confidence=0.8)
     at = AppTest.from_function(_editor_page, args=(None,), default_timeout=120)
     at.run()
-    at.text_input(key=f"e{target.id}_label").input("relabelled").run()
-    at.checkbox(key=f"e{target.id}_has").uncheck().run()
+    at.text_input(key=f"{form_key(target)}_label").input("relabelled").run()
+    at.checkbox(key=f"{form_key(target)}_has").uncheck().run()
     _button(at, "Save changes").click().run()
     _button(at, "Save changes").click().run()
     saved = app_svc.db.get_object(target.id)

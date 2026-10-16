@@ -21,7 +21,7 @@ detector output is silently thrown away.
      contributes its outline. The result is a *whole* object.
    * A geometric shape / colour region covering the same area as a model
      detection (IoU >= SAME_REGION_IOU) is merged too. The model's label only
-     wins if its confidence is >= CONFIDENT; otherwise the geometric label is
+     wins if its confidence is >= CONFIDENT (0.65); otherwise the geometric label is
      kept (models are often wrong on drawings) and the guess is an alternative.
      Shapes are never merged into a *whole* object (an apple's round body stays
      a separate "circle" part).
@@ -40,7 +40,12 @@ from .labels import CHARACTER_LABEL, compatible, is_person_like, specificity
 SAME_OBJECT_IOU = 0.5
 SAME_REGION_IOU = 0.8
 PART_CONTAINMENT = 0.85
-CONFIDENT = 0.5
+# A model label replaces a clean OpenCV shape/colour region (which only exist on
+# flat illustrations) only from this confidence on. Measured in the browser test
+# run on the fixtures: wrong overrides scored 0.57-0.59 ('kite' for an orange
+# blob, 'orange' for an orange ellipse); the correct 'orange' on the orange
+# fixture scored 0.71. Few data points: a pragmatic threshold, not a tuned one.
+CONFIDENT = 0.65
 
 
 def containment(small: BBox, big: BBox) -> float:

@@ -14,3 +14,6 @@ rembg[cpu]>=2.0.85
 
 # Testing
 pytest>=8.0
+# Optional: real-browser tests (tests/test_browser_e2e.py skip without it); then run
+#   python -m playwright install chromium
+# playwright>=1.64

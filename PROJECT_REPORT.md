@@ -1,6 +1,6 @@
 # Project Report: Image Catalog, Object Detection, Metadata Management and Composite Image Generation System
 
-_Report date: 2026-10-14 · Platform: Windows 11, Python 3.12.10, Streamlit 1.65.0 · Repository: `C:\Users\kusha\Image-Catalog-System`_
+_Report date: 2026-10-16 · Platform: Windows 11, Python 3.12.10, Streamlit 1.65.0 · Repository: `C:\Users\kusha\Image-Catalog-System`_
 
 ---
 
@@ -152,7 +152,8 @@ person-like.
 - **OpenCV vs model.**
   - A foreground blob with IoU ≥ 0.5 is the same object. The model provides the name; OpenCV provides the
     outline and the full extent (e.g. an apple's stem and leaf).
-  - A shape or region with IoU ≥ 0.8 is merged, but the model's label wins only at confidence ≥ 0.5.
+  - A shape or region with IoU ≥ 0.8 is merged, but the model's label wins only at confidence ≥ 0.65
+    (raised from 0.5 after the browser test run showed "kite" 0.57 replacing an orange colour region).
   - Shapes inside a whole object stay as parts (`part_of`).
 - **Nothing is discarded.** Merged detections are kept in `merged_from` and `alternative_labels`, and confidence
   always belongs to the kept label (never averaged).
@@ -267,9 +268,11 @@ Command: `python -m pytest` (Windows PowerShell, venv). **Result of the final ru
 | `test_regressions.py` | 10 | correction made *during* detection survives; failure rolls back; provenance snapshot; deleted sources; health check; fast queries; old records |
 | `test_review_fixes.py` | 11 | each defect from the independent code review (§8.3, items 12-20) |
 | `test_catalog.py` | 8 | upload, duplicates, invalid files, EXIF rotation, alpha, delete cascade, long names |
-| `test_bbox_editor_ui.py` | 6 | Manual Editor with simulated browser gestures: payload, move → form → save, gesture applied once, click-to-select, draw → add, clamping |
+| `test_bbox_editor_ui.py` | 7 | Manual Editor with simulated browser gestures: payload, move → form → save, gesture applied once, click-to-select, draw → add, clamping, a move on a non-selected box is applied (not dropped) |
 | `test_cutout_rembg.py` | 5 | rembg removes background; respects known outline; `auto` never downloads; exact contours preferred |
 | `test_visualization.py` | 2 | label tags never overlap |
+| `test_browser_run_fixes.py` | 7 | defect 21: shapes/colour regions not overridden by low-confidence model labels (measured scores; real models end to end) |
+| `test_browser_e2e.py` | 2 | defect 22: **real Chromium** (Playwright) against a temporary app: Use → drag → Save keeps label and box; form key changes per saved edit. Skipped if Playwright is not installed |
 | `test_bbox_editor_js.py` | 1 (11 checks) | JavaScript hit-testing, move/resize clamping, drawing, run with Node.js |
 
 Tests use temporary folders and never touch `data/`. Model-dependent and Node-dependent tests skip themselves if
@@ -331,18 +334,54 @@ tests were additionally checked to fail when their fix is disabled):
 Also improved: cached thumbnails, single-query object counts, pagination (24 per page), display-sized previews of
 large photos, spinners for detection/planning/saving, friendly error messages instead of tracebacks.
 
+Found by the real-browser (Playwright) acceptance run on 2026-10-16 (fixed with the user's approval; regression
+tests added):
+
+21. On illustrations, with the learned models enabled, a model label with confidence ≥ 0.5 replaced a correct
+    OpenCV shape or colour region: YOLO "kite" 0.57 replaced the orange colour swatch, and YOLOE "orange" 0.59
+    replaced the orange ellipse. The automated tests ran with the models switched off, so they did not see this
+    → the threshold was raised to 0.65 (§5.4); the correct "orange" 0.71 on the orange fixture still wins.
+22. **(High)** In a real browser, Streamlit keeps a keyed widget's last value on the page and sends it back on the
+    next interaction. As a result:
+    - a label changed with **Use/Apply** still showed the old value, and the next **Save changes** wrote it back;
+    - the object dropdown could send a stale selection, so a drag made right after a canvas selection was
+      discarded.
+
+    The 14 Oct fix (clearing server-side state) only worked in the headless test runner. Fixed with:
+    - edit-form widget keys that include the object's revision (one per saved edit),
+    - the selection kept in a plain session value with a selection-specific dropdown key,
+    - moves on a non-selected box being applied instead of dropped.
+
+    Guarded by a real-Chromium end-to-end test. Lesson: the headless runner does not model browser-held widget
+    state, so UI flows that change a widget's value from code need a real-browser test.
+
 ### 8.4 Final automated test run
-`python -m pytest` on 2026-10-14 (Windows 11, Python 3.12.10, existing `.venv`): **208 passed, 0 skipped, 0 failed**
-(~95 s). Additionally verified on this machine:
+`python -m pytest` on 2026-10-16 (Windows 11, Python 3.12.10, existing `.venv`, Playwright 1.64 installed):
+**218 passed, 0 skipped, 0 failed** (~100 s). History: 208 on 2026-10-14, plus 10 tests for defects 21–22.
+Additionally verified on this machine:
 - **Windows PowerShell:** `.\.venv\Scripts\Activate.ps1` works under the CurrentUser `RemoteSigned` policy and
   all packages import.
 - **Real-data render:** all 7 pages render without errors against a *copy* of the real catalog (including a
   3836×2557 photo and an earlier composite).
 - **Live catalog:** the health check reports "No problems found".
 
-### 8.5 Not verified automatically
-Real pointer interaction with the mouse editor, touch input, accuracy on a larger set of real cartoons, and
-visual cut-out quality on your own images. See `MANUAL_TESTING.md`.
+### 8.5 Real-browser acceptance run (2026-10-16)
+The manual checklist was executed with Playwright (Chromium, real mouse events, real file-dialog uploads, page
+reloads, window resizing).
+- **Isolation:** a separate app instance used a copy of the catalog; the live catalog stayed byte-identical to
+  its backup.
+- **Result:** **37 checks PASS** after fixing defects 21–22 (A1–A9, B1–B3, C1–C4, D1, E1–E3, E5–E6, F1–F4,
+  detection on every fixture, apple + orange composite from the user's real photos).
+- **Evidence:** screenshots, composites and `results.json` in `test_evidence\2026-10-16_playwright\`
+  (git-ignored).
+
+**Not tested:**
+- A10: touch input.
+- C5: the user's own cartoons.
+- E4: cell editing in the composer's layer table, which is a canvas grid Playwright cannot fill reliably; its
+  logic is unit-tested.
+
+See `MANUAL_TESTING.md` for every result.
 
 ---
 
@@ -357,12 +396,14 @@ visual cut-out quality on your own images. See `MANUAL_TESTING.md`.
 - **Photos.** Only the 80 COCO classes are detected automatically; OpenCV analysis is skipped on photos.
 - **Colour names** are HSV rules and can be shifted by lighting.
 - **Cut-outs.**
+  - Masks are limited to the detected box. When a model's box is slightly tight, edges are clipped (the user's
+    apple photo lost a sliver of its left side and the stem tip; the orange's leaves were clipped where they
+    leave the box). Fix by hand: enlarge the box in the Manual Editor.
   - rembg can keep ground shadows.
   - Fine structures (hair, fur) and heavily overlapping objects remain hard.
   - Occluded shapes are cut out with only their visible part.
 - **Instructions.** Rule-based: free-form descriptions and exact distances are not understood.
-- **Mouse editor.** The geometry and the Python side are tested, but real pointer interaction in a browser
-  must be checked by hand. Touch devices are untested.
+- **Mouse editor.** Verified with real mouse events in Chromium (Playwright). Touch devices are untested.
 - **Scale.** Designed for a single local user. SQLite with one connection per operation is fine for hundreds
   of images; detection runs on the CPU (about 1–4 s per image after a ~20 s first model load).
 

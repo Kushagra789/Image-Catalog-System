@@ -164,7 +164,7 @@ imagecat/
   visualization.py           box/label drawing
   ui/                        one module per page; bbox_editor.py + static/bbox_editor.js (mouse editor)
 scripts/generate_test_images.py
-tests/                       pytest suite (15 files)
+tests/                       pytest suite (17 test modules, incl. a real-browser test)
 test_data/real_cartoons/     6 openly licensed real test images (not in git)
 ```
 
@@ -213,8 +213,9 @@ The table structure has not changed since the first version, so earlier catalogs
 
 ## 7. Testing summary
 
-`python -m pytest` → **208 passed, 0 skipped** (2026-10-14, Windows 11, Python 3.12.10). Tests use temporary
-folders and never touch `data\`. Model- and Node-dependent tests skip themselves when their dependency is missing.
+`python -m pytest` → **218 passed, 0 skipped** (2026-10-16, Windows 11, Python 3.12.10). Tests use temporary
+folders and never touch `data\`. Model-, Node- and Playwright-dependent tests skip themselves when their
+dependency is missing.
 
 | Area | Files |
 |---|---|
@@ -225,9 +226,24 @@ folders and never touch `data\`. Model- and Node-dependent tests skip themselves
 | Composites, provenance, missing assets, spatial instructions, cut-outs | `test_composer.py`, `test_spatial_composition.py`, `test_cutout_rembg.py`, `test_parser.py` |
 | All 7 pages, mouse editor (simulated gestures + JS geometry with Node) | `test_ui_smoke.py`, `test_bbox_editor_ui.py`, `test_bbox_editor_js.py`, `test_visualization.py` |
 | Fixes from the final independent code review | `test_review_fixes.py` |
+| Fixes from the real-browser acceptance run; **real Chromium** end-to-end editor test | `test_browser_run_fixes.py`, `test_browser_e2e.py` |
+
+**Real-browser acceptance run (2026-10-16).** The manual checklist was executed with Playwright against a separate
+app instance using a copy of the catalog: **37 checks passed** after two defects were found and fixed. Results and
+evidence are in `MANUAL_TESTING.md`; screenshots are in the git-ignored `test_evidence\` folder.
+
+Optional browser tooling (used for that run, ~0.7 GB of browser files):
+
+```powershell
+pip install playwright
+$env:PLAYWRIGHT_BROWSERS_PATH = "$PWD\.playwright"     # keep the browsers inside the project (git-ignored)
+python -m playwright install chromium
+python -m pytest tests\test_browser_e2e.py               # real-Chromium editor test
+```
 
 The full testing report, real-image evaluation and list of defects found and fixed are in `PROJECT_REPORT.md` §8.
-**What still needs a human in a browser** is listed in `MANUAL_TESTING.md`.
+**The few items that still need a person** (touch input, your own cartoons, layer-table cell editing) are listed
+at the end of `MANUAL_TESTING.md`.
 
 ## 8. Limitations
 
@@ -236,8 +252,8 @@ The full testing report, real-image evaluation and list of defects found and fix
 - **Boy/girl** from appearance is unreliable and is never applied automatically.
 - **Photos:** only the 80 COCO classes are detected automatically.
 - **Colour names** are rule-based and can be shifted by lighting.
-- **Cut-outs:** rembg may keep ground shadows; hair, fur and heavy overlaps remain hard.
+- **Cut-outs:** masks are limited to the detected box, so a slightly tight box clips edges (enlarge the box in
+  the Manual Editor); rembg may keep ground shadows; hair, fur and heavy overlaps remain hard.
 - **Instructions** are rule-based: no free-form descriptions or exact distances.
-- **Mouse editor:** the logic is tested, but real pointer use in a browser must be checked by hand; touch is
-  untested.
+- **Mouse editor:** verified with real mouse events in Chromium; touch input is untested.
 - **Single-user local application** on CPU.

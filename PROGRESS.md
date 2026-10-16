@@ -1,10 +1,10 @@
 # Progress Log: Image Catalog System
 
-_Last updated: 2026-10-14. **Final status: feature-complete; 208/208 automated tests passing; ready for final
-manual verification (see `MANUAL_TESTING.md`).**_
+_Last updated: 2026-10-16. **Status: feature-complete; 218/218 automated tests passing; 37 real-browser acceptance
+checks passed (Playwright). Four small items remain for a person (see §5).**_
 
 Documentation: `README.md` (install, run, architecture, schema, testing summary) · `PROJECT_REPORT.md` (full report)
-· `MANUAL_TESTING.md` (browser checklist) · this file (status and history).
+· `MANUAL_TESTING.md` (checklist with actual results) · this file (status and history).
 
 ---
 
@@ -13,21 +13,21 @@ Documentation: `README.md` (install, run, architecture, schema, testing summary)
 ```powershell
 cd C:\Users\kusha\Image-Catalog-System
 .\.venv\Scripts\Activate.ps1                 # Python 3.12.10 venv (blocked? Set-ExecutionPolicy -Scope CurrentUser RemoteSigned)
-python -m pytest                             # expect: 208 passed (~1.5 min)
+python -m pytest                             # expect: 218 passed (~1.5–2 min)
 streamlit run app.py                         # http://localhost:8501 ; Ctrl+C to stop
 ```
 
 ```powershell
 python -m pytest -k compos                   # subset
 python -m pytest -rs                         # show reasons for skips (none expected here)
+python -m pytest tests\test_browser_e2e.py   # real-Chromium editor test (needs Playwright; README §7)
 python scripts\generate_test_images.py       # export synthetic fixtures + ground truth
 pip install -r requirements-lock.txt         # recreate the exact tested environment
 Copy-Item data\catalog.db "data\backups\catalog_$(Get-Date -Format yyyyMMdd_HHmmss).db"   # backup
 ```
 
-**After this update:** the Streamlit server you started at 18:27 on 2026-10-14 still runs the *previous* code
-(its cached service objects predate today's fixes). Stop it with Ctrl+C in its terminal and run
-`streamlit run app.py` again before manual testing.
+**Restart the app before using it:** the copy started at 21:00 on 2026-10-16 runs code from before the two fixes
+of 21:29 and 22:05 (§4). Press Ctrl+C in its terminal, then run `streamlit run app.py` again.
 
 ---
 
@@ -43,16 +43,19 @@ Copy-Item data\catalog.db "data\backups\catalog_$(Get-Date -Format yyyyMMdd_HHmm
 - [x] Test data: 9 deterministic synthetic fixtures with ground truth plus 6 licensed real cartoon images.
 - [x] Seven Streamlit pages.
 
-### Improvements (sessions 3–4)
+### Improvements (sessions 3–5)
 - [x] Hybrid cartoon detection (YOLO + vocabulary-restricted YOLOE + OpenCV face-like heuristic); boy/girl only as
       an unverified suggestion.
 - [x] Label-aware duplicate merging; alternatives kept; parts of larger objects marked and hideable.
 - [x] Spatial instructions (positions, relations, size, depth).
-- [x] Mouse bounding-box editor (select, move, resize, draw) synced with exact numeric inputs.
+- [x] Mouse bounding-box editor (select, move, resize, draw) synced with exact numeric inputs; **verified with real
+      mouse events in Chromium**.
 - [x] rembg (U2Net) cut-outs, constrained by box and outline.
 - [x] Database health check (read-only) on the Dashboard.
-- [x] Correction safety: re-detection runs in a write-locked transaction that re-reads corrections; moved
-      detections are protected at their original place; form state is cleared after saves.
+- [x] Correction safety:
+      - re-detection runs in a write-locked transaction that re-reads corrections;
+      - moved detections are protected at their original place;
+      - edit-form and selection state are safe against stale browser widget values.
 - [x] Performance: cached thumbnails, single-query counts/search, pagination, display-sized previews, low-memory
       cut-outs.
 - [x] Error handling and spinners on all long operations.
@@ -62,115 +65,115 @@ Copy-Item data\catalog.db "data\backups\catalog_$(Get-Date -Format yyyyMMdd_HHmm
 
 ## 3. Test results
 
-**2026-10-14: `python -m pytest` → 208 passed, 0 skipped, 0 failed** (Windows 11, Python 3.12.10, existing `.venv`).
+**Automated (2026-10-16): `python -m pytest` → 218 passed, 0 skipped, 0 failed** (Windows 11, Python 3.12.10,
+existing `.venv`, Playwright 1.64 installed).
 
 | File | Tests | File | Tests |
 |---|---|---|---|
-| test_hybrid_detection.py | 31 | test_parser.py | 13 |
-| test_detection.py | 26 | test_review_fixes.py | 11 |
-| test_spatial_composition.py | 22 | test_regressions.py | 10 |
-| test_corrections.py | 21 | test_catalog.py | 8 |
-| test_composer.py | 19 | test_bbox_editor_ui.py | 6 |
+| test_hybrid_detection.py | 31 | test_review_fixes.py | 11 |
+| test_detection.py | 26 | test_regressions.py | 10 |
+| test_spatial_composition.py | 22 | test_catalog.py | 8 |
+| test_corrections.py | 21 | test_bbox_editor_ui.py | 7 |
+| test_composer.py | 19 | test_browser_run_fixes.py | 7 |
 | test_ui_smoke.py | 19 | test_cutout_rembg.py | 5 |
-| test_fixtures_and_yolo.py | 14 | test_visualization.py | 2 |
+| test_fixtures_and_yolo.py | 14 | test_browser_e2e.py | 2 |
+| test_parser.py | 13 | test_visualization.py | 2 |
 | | | test_bbox_editor_js.py | 1 (11 JS checks) |
 
-**Also verified:**
-- `Activate.ps1` and all imports work in a fresh PowerShell under the `RemoteSigned` policy.
-- All 7 pages render without errors on a copy of the real catalog.
-- The live catalog passes the health check.
+**Real-browser acceptance run (2026-10-16), Playwright + Chromium, on a copy of the catalog: 37 checks PASS**
+- **Covered:** A1–A9, B1–B3, C1–C4, D1, E1–E3, E5–E6, F1–F4, detection on every fixture, and the apple + orange
+  composite from your real photos.
+- **Full results:** every result with its evidence is in `MANUAL_TESTING.md`.
+- **Evidence:** screenshots, composites and `results.json` are in `test_evidence\2026-10-16_playwright\`
+  (git-ignored).
 
-**History:** 117 tests (session 1) → 121 → 186 (session 3) → 208 (session 4).
-
----
-
-## 4. Session 4 (2026-10-14): what changed
-
-- **Bugs found on real data:** a product photo on a white background was treated as an illustration →
-  foreground-coverage rule.
-- **Bugs found by me:** a correction made *during* a running detection could be deleted; the status update ran
-  outside the transaction.
-- **Independent code review:** 9 confirmed defects plus 3 uncertain ones. All fixed, with regression tests. The
-  most serious was a relabel being silently reverted by the next "Save changes".
-- **New:** health check, composite source snapshots, delete warnings, pagination, caching, spinners, error handling.
-- **Docs:** README rewritten; new `PROJECT_REPORT.md` and `MANUAL_TESTING.md`; this file.
-- **No schema change; no data deleted.** Backups before the work: `data\backups\catalog_20261014_182725.db`,
-  `catalog_20261014_184352_before_finalize.db`.
+**History:** 117 tests (session 1) → 121 → 186 (session 3) → 208 (session 4) → 218 (session 5).
 
 ---
 
-## 5. Remaining limitations / open items
+## 4. Session 5 (2026-10-16): what changed
 
-**Needs manual verification:** see `MANUAL_TESTING.md`. The key items are:
-- [ ] the mouse editor with a real pointer,
-- [ ] real cartoon and photo behaviour in the UI,
-- [ ] composite quality.
-
-**Known limitations:**
-- Cartoon semantics are limited (line art and stylised characters are missed); gender is never inferred
-  automatically.
-- Only the 80 COCO classes are detected on photos.
-- Colour names are rule-based.
-- rembg may keep shadows.
-- The instruction parser is rule-based.
-- Single-user, CPU-only.
-
-**Your data:**
-- Image #2 (clementine) still holds 8 OpenCV regions from before the photo fix. It has no corrections, so
-  Object Detection → *Keep my corrections* → Run detection refreshes it safely. I did not change your data
-  automatically.
-- The existing apple record keeps its ~200-character internal name; the 80-character cap applies to new
-  uploads only.
-
-**Open decisions (yours):**
-- [ ] Delete `C:\Users\kusha\AppData\Roaming\Ultralytics\settings.json` (created outside the project by an
-      early version check in session 1; harmless).
-- [x] `git init` and a first commit: done 2026-10-14 (see section 7).
-- [ ] Connect GitHub (create a remote repository and push): deferred. You will do this later.
-- [ ] Re-run detection on image #2 (clementine): deferred, not done.
+- **Manual results corrected.** Results A1–A5 reported in chat earlier that day were withdrawn: the database
+  showed the steps had not reached the app. The Chrome extension could not be authorised, so the checklist was
+  run with **Playwright** (installed with your approval). The browser files take 719 MB in `.playwright\`
+  (git-ignored), not the ~150 MB first estimated.
+- **Defect 21 (fixed with approval, 21:29).** On illustrations, model labels with confidence ≥ 0.5 replaced
+  correct OpenCV shapes and colour swatches ("kite" 0.57 for the orange swatch, "orange" 0.59 for the orange
+  ellipse). Threshold raised to 0.65 in `detection/merge.py`; 7 regression tests added.
+- **Defect 22 (fixed with approval, 22:05; High).**
+  - *Symptom:* in a real browser, a label changed with Use/Apply was reverted by the next Save, and a drag made
+    right after a canvas selection could be dropped.
+  - *Cause:* stale widget values held by the browser.
+  - *Fix:* revision-based form keys plus a non-widget selection state in `ui/editor.py`.
+  - *Tests:* 3 regression tests, including a real-Chromium end-to-end test.
+- **Docs and requirements:** `MANUAL_TESTING.md` now records actual results; `PROJECT_REPORT.md` §8.3–8.5 and §9,
+  `README.md` §7–8, `requirements.txt` (Playwright as optional) and `requirements-lock.txt` were updated.
+- **Data:** your live catalog was not modified; it is byte-identical to
+  `data\backups\catalog_20261016_210223_before_manual_tests.db`.
 
 ---
 
-## 6. Saved state (2026-10-14)
+## 5. What remains
+
+**For a person (details at the end of `MANUAL_TESTING.md`):**
+- [ ] A10: mouse editor on a touch device (optional).
+- [ ] C5: upload a few of your own cartoons and note the results.
+- [ ] E4: edit x/y/scale/z in the Composite Generator's layer table, including clearing one cell.
+
+**Your decisions:**
+- [ ] **Image #2 (clementine).** It still holds 8 OpenCV regions from before the photo fix, and its orange
+      cut-out is noticeably worse than a refreshed record's. It has no corrections, so Object Detection →
+      *Keep my corrections* → Run detection refreshes it safely. Not done.
+- [ ] **Stray settings file.** Delete `C:\Users\kusha\AppData\Roaming\Ultralytics\settings.json` (created
+      outside the project in session 1; harmless).
+- [ ] **Connect GitHub and push.** Deferred; ask first (§7).
+- [ ] **Remove the browser files (optional).** To free 719 MB after testing: `pip uninstall playwright` and delete
+      `.playwright\`. `tests/test_browser_e2e.py` then skips itself.
+
+**Known limitations** (`README.md` §8):
+- Cartoon semantics are limited; gender is never inferred automatically.
+- Only COCO classes are detected on photos.
+- Cut-outs are clipped to the detected box (slightly tight boxes clip edges).
+- Colour names are rule-based; the instruction parser is rule-based.
+- Touch input is untested; single-user, CPU-only.
+
+---
+
+## 6. Saved state (2026-10-16)
 
 | Item | State |
 |---|---|
-| Source code | `app.py`, `imagecat\`, `tests\` (15 files), `scripts\` |
-| Catalog | `data\catalog.db`: 3 images, 12 objects; integrity ok; health check clean |
+| Source code | `app.py`, `imagecat\`, `tests\` (17 test modules + conftest.py), `scripts\` |
+| Catalog | `data\catalog.db`: 3 images, 12 objects, 0 corrections; integrity ok; unchanged by testing |
 | Images | `data\images\` (3 files, all present) |
-| Backups | `data\backups\` (3 database backups) |
+| Backups | `data\backups\` (4 database backups, newest `catalog_20261016_210223_before_manual_tests.db`) |
 | Models | `models\yolo11n-seg.pt`, `models\yoloe-26s-seg-pf.pt`, `models\rembg\models\u2net\u2net.onnx` (MD5 verified) |
+| Test tooling | `.playwright\` (Chromium for Playwright, 719 MB, git-ignored) |
+| Test evidence | `test_evidence\2026-10-16_playwright\` (git-ignored; contains copies of your photos) |
 | Environment | `.venv\` (Python 3.12.10); exact versions in `requirements-lock.txt` |
-| Version control | local Git repository on branch `main` (section 7) |
 
 ---
 
-## 7. Git status (checked 2026-10-14)
+## 7. Git status
 
 | Item | Status |
 |---|---|
 | Repository | local only: `C:\Users\kusha\Image-Catalog-System\.git`, branch `main` |
-| Commits | `f6ee8ff`: "Image Catalog System: complete project (208 tests passing)", 61 files (code, tests, docs, config) |
-| Author identity | `Kushagra Pandey <259154468+Kushagra789@users.noreply.github.com>`, from the global `C:\Users\kusha\.gitconfig` (no project-specific settings; **left unchanged by choice**) |
-| Remote | **none**. Nothing has been pushed; no GitHub repository exists for this project yet |
-| GitHub CLI (`gh`) | not installed |
-| Credential helper | Git Credential Manager (`manager`). Stored GitHub credentials, if any, were not inspected |
-| Not in Git (by `.gitignore`) | `data\` (catalog + images + backups), `models\`, `.venv\`, `test_data\` (synthetic exports, third-party cartoon images), caches |
+| Commits before this session | `f6ee8ff` (complete project), `b23ebe3` (progress and Git status) |
+| Author identity | `Kushagra Pandey <259154468+Kushagra789@users.noreply.github.com>` from the global `.gitconfig` (unchanged) |
+| Remote | **none**; nothing has been pushed |
+| Ignored (never committed) | `data\` (catalog, images, backups), `models\`, `.venv\`, `.playwright\`, `test_data\`, `test_evidence\`, caches |
 
-Changes made after the first commit (such as this update to `PROGRESS.md`) are not committed yet. Check with
-`git status`.
-
-**Later, to connect GitHub** (only when you decide to; these commands were not run):
+**Later, to connect GitHub** (only when you decide to; these commands have not been run):
 
 ```powershell
-cd C:\Users\kusha\Image-Catalog-System
-git status                      # commit any pending changes first:  git add -A ; git commit -m "..."
+git status                      # make sure everything is committed
 # create an EMPTY repository on github.com (no README/licence), then:
 git remote add origin https://github.com/<your-account>/<repo-name>.git
 git push -u origin main
 ```
 
-Before pushing, note:
-- The models (~220 MB) and your catalog data stay local, because they are ignored.
-- Ultralytics models are AGPL-3.0. Keep the repository private, or check the licence, if that matters for
-  your submission.
+Before pushing:
+- The models (~220 MB), the Playwright browsers and your catalog/photos stay local, because they are ignored.
+- Ultralytics models are AGPL-3.0. Keep the repository private, or check the licence, if that matters for your
+  submission.

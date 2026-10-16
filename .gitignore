@@ -21,3 +21,9 @@ test_data/real_cartoons/
 Thumbs.db
 .vscode/
 .idea/
+
+# Playwright browser binaries (UI test tooling)
+.playwright/
+
+# UI test evidence (contains copies of your own photos)
+test_evidence/

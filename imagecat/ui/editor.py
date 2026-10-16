@@ -35,19 +35,18 @@ def _confidence_input(current: float | None, key: str) -> float | None:
                            0.01, key=f"{key}_val")
 
 
-FORM_FIELDS = ("label", "sel", "txt", "has", "val", *BOX_FIELDS)
+def form_key(obj) -> str:
+    """Widget-key prefix for an object's edit form, unique per saved revision.
 
-
-def _forget_form(object_id) -> None:
-    """Drop the edit form's widget state for an object.
-
-    Streamlit keeps a keyed widget's value even when its default changes, so
-    after a label is changed by a button (Apply / Use) or saved, the form would
-    otherwise still hold the old values, and the next "Save changes" would
-    silently write them back over the correction.
+    A real browser remembers a keyed widget's value and sends it back on the
+    next interaction, even after the server-side copy is cleared. Without a new
+    key, a label changed by Apply / Use / Save would still show the old value,
+    and the next "Save changes" would write it back over the correction (found
+    in the Playwright browser test run; the headless test runner did not show
+    it). Every saved edit adds one ``edit_history`` entry, so the key changes
+    exactly when the database values change. Unsaved box drags keep the key.
     """
-    for f in FORM_FIELDS:
-        st.session_state.pop(f"e{object_id}_{f}", None)
+    return f"e{obj.id}r{len(obj.attributes.get('edit_history', []))}"
 
 
 def _init_box_state(key: str, box: tuple[int, int, int, int]) -> None:
@@ -93,7 +92,6 @@ def _suggestions(svc, obj) -> None:
             c1.caption("⚠️ " + s.get("warning", "Unverified suggestion."))
             if c2.button("Apply", key=f"sug_{obj.id}_{i}", help="Only apply if you can confirm it yourself."):
                 svc.update_object(obj.id, label=s["label"])
-                _forget_form(obj.id)
                 st.session_state["edit_flash"] = f"Object #{obj.id} relabelled as '{s['label']}' (by you)."
                 st.rerun()
         for i, a in enumerate(alts):
@@ -102,14 +100,30 @@ def _suggestions(svc, obj) -> None:
             c1.markdown(f"Also detected as **{a['label']}** ({a['source']}, {conf})")
             if c2.button("Use", key=f"alt_{obj.id}_{i}"):
                 svc.update_object(obj.id, label=a["label"])
-                _forget_form(obj.id)
                 st.session_state["edit_flash"] = f"Object #{obj.id} relabelled as '{a['label']}'."
                 st.rerun()
 
 
+def selection_key(rec) -> str:
+    """Session key holding the selected object id: the single source of truth.
+
+    It is deliberately *not* a widget key: a real browser sends a keyed
+    widget's last value back on the next interaction, so a selection made by
+    clicking a box on the canvas could silently revert to the dropdown's old
+    value (and the following drag was then discarded).
+    """
+    return f"edit_selected_{rec.id}"
+
+
 def _edit_panel(svc, rec, obj, objects):
-    k = f"e{obj.id}"
-    st.selectbox("Object", [o.id for o in objects], key=f"edit_obj_{rec.id}",
+    k = form_key(obj)
+    ids = [o.id for o in objects]
+    widget_key = f"edit_obj_{rec.id}_{obj.id}"  # new widget whenever the selection changes
+
+    def _picked():
+        st.session_state[selection_key(rec)] = st.session_state[widget_key]
+
+    st.selectbox("Object", ids, index=ids.index(obj.id), key=widget_key, on_change=_picked,
                  format_func=lambda i: object_caption(next(o for o in objects if o.id == i)))
     label = st.text_input("Label", value=obj.label, key=f"{k}_label")
     color = _color_input(obj.color, k)
@@ -124,7 +138,6 @@ def _edit_panel(svc, rec, obj, objects):
     if c1.button("Save changes", type="primary", key=f"{k}_save"):
         try:
             svc.update_object(obj.id, label=label, color=color, confidence=conf, bbox=bbox)
-            _forget_form(obj.id)  # e.g. a relabel may have cleared the model confidence
             st.session_state["edit_flash"] = f"Object #{obj.id} saved."
             st.rerun()
         except ValidationError as exc:
@@ -197,24 +210,33 @@ def page() -> None:
     use_mouse = MOUSE_EDITOR and st.session_state.get("mouse_editor", True)
 
     if mode == MODE_EDIT and objects:
-        sel_key = f"edit_obj_{rec.id}"
+        sel_key = selection_key(rec)
         ids = [o.id for o in objects]
         if st.session_state.get(sel_key) not in ids:
             st.session_state[sel_key] = ids[0]
         obj = next(o for o in objects if o.id == st.session_state[sel_key])
-        k = f"e{obj.id}"
+        k = form_key(obj)
         _init_box_state(k, obj.bbox.as_tuple())
         if use_mouse:
             with preview_col:
                 event = bbox_editor(path, rec.width, rec.height,
                                     editor_boxes(objects, {obj.id: _box_state(k)}), obj.id, "edit",
                                     key=f"bbe_edit_{rec.id}")
-            if event and event.get("id") in ids and event["id"] != obj.id:
-                st.session_state[sel_key] = event["id"]  # clicked another box: select it
-                st.rerun()
-            if event and event.get("id") == obj.id and event.get("action") != "select":
-                _set_box_state(k, rec, event)
-                st.rerun()
+            if event and event.get("id") in ids:
+                target = next(o for o in objects if o.id == event["id"])
+                changed = False
+                if target.id != obj.id:
+                    st.session_state[sel_key] = target.id  # clicked another box: select it
+                    changed = True
+                if event.get("action") != "select":
+                    # Apply moves/resizes to the box they were made on, even if the
+                    # selection had changed in between: a gesture is never dropped.
+                    tk = form_key(target)
+                    _init_box_state(tk, target.bbox.as_tuple())
+                    _set_box_state(tk, rec, event)
+                    changed = True
+                if changed:
+                    st.rerun()
         with controls:
             bbox, label = _edit_panel(svc, rec, obj, objects)
         if not use_mouse:
